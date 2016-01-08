@@ -1,0 +1,23 @@
+php-fpm:
+    build: php-fpm
+    ports:
+        - 9000:9000
+    volumes:
+        - ./app:/var/www/html/
+    links:
+        - db
+nginx:
+    build: nginx
+    ports:
+        - 8080:80
+    links:
+        - php-fpm
+db:
+    image: mysql
+    ports:
+        - 3306:3306
+    environment:
+        MYSQL_DATABASE: mydb
+        MYSQL_USER: dev
+        MYSQL_PASSWORD: 123123
+        MYSQL_ROOT_PASSWORD: 123123
