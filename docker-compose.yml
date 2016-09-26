@@ -10,6 +10,8 @@ nginx:
     build: nginx
     ports:
         - 8080:80
+    volumes:
+        - ./app:/var/www/html/        
     links:
         - php-fpm
 db:
