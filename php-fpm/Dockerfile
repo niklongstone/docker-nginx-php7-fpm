@@ -1,4 +1,4 @@
-FROM php:7.0-fpm
+FROM php:7.2-fpm
 
 MAINTAINER Nicola Pietroluongo <nik.longstone@gmail.com>
 
