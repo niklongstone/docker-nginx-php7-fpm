@@ -1,3 +1,3 @@
-FROM debian:jessie
+FROM debian:trixie
 
 VOLUME /var/www/html

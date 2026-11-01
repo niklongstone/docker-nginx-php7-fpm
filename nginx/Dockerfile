@@ -1,4 +1,4 @@
-FROM debian:jessie
+FROM debian:trixie
 
 MAINTAINER Nicola Pietroluongo <nik.longstone@gmail.com>
 
