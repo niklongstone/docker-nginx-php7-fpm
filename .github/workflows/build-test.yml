@@ -1,0 +1,61 @@
+name: build-test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and start the stack
+        run: docker compose up --build -d
+
+      - name: Page connects to the database
+        run: |
+          for i in $(seq 1 40); do
+            body=$(curl -s http://localhost:8080/ || true)
+            if echo "$body" | grep -q 'Database connection Ok'; then
+              echo "::notice title=page::$body"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error title=page::$body"
+          exit 1
+
+      - name: PHP is the patched version
+        run: |
+          version=$(docker compose exec -T php-fpm php -r 'echo PHP_VERSION;')
+          echo "::notice title=php version::$version"
+          test "$version" = "8.4.27"
+
+      - name: Session upload progress is disabled
+        run: |
+          value=$(docker compose exec -T php-fpm php -r 'var_export(ini_get("session.upload_progress.enabled"));')
+          echo "::notice title=upload_progress::$value"
+          test "$value" = "'0'"
+
+      - name: Only nginx is reachable from outside
+        run: |
+          ss -ltn
+          if ss -ltn | grep -q ':9000 '; then
+            echo "::error title=ports::port 9000 is published"
+            exit 1
+          fi
+          if ss -ltn | grep ':3306 ' | grep -qv '127.0.0.1:3306'; then
+            echo "::error title=ports::port 3306 is not limited to localhost"
+            exit 1
+          fi
+          echo "::notice title=ports::9000 not published, 3306 localhost only"
+
+      - name: Show logs on failure
+        if: failure()
+        run: docker compose logs --no-color
